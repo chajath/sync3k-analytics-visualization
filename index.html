@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <div id="tester" style="width:100%;height:100%;"></div>
+    <script>
+        const tester = document.getElementById('tester');
+        Plotly.plot(tester, [{
+            x: [1,2,3,4,5],
+            y: [2,4,6,8,10]
+        }], {
+            margin: {t: 0}
+        });
+    </script>
+
+</body>
+
+</html>
