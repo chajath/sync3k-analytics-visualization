@@ -7,15 +7,56 @@
 </head>
 
 <body>
-    <div id="tester" style="width:100%;height:100%;"></div>
+    <div id="tester" style="width:100%;height:500px;"></div>
     <script>
         const tester = document.getElementById('tester');
-        Plotly.plot(tester, [{
-            x: [1,2,3,4,5],
-            y: [2,4,6,8,10]
-        }], {
+        Plotly.plot(tester, [], {
             margin: {t: 0}
         });
+
+        let seriesCount = 0;
+        const seriesMap = new Map();
+
+        const handleMessage = (ev) => {
+            const data = JSON.parse(ev.data);
+            if (!data.message) {
+                return;
+            }
+            const message = JSON.parse(data.message);
+            lastOffset = message.id;
+            
+            if (!message.actionType || !message.topic) {
+                return;
+            }
+
+            const actionType = message.actionType;
+            const topic = message.topic;
+
+            const seriesName = `${topic}-${actionType}`;
+            let seriesNumber;
+            if (seriesMap.has(seriesName)) {
+                seriesNumber = seriesMap.get(seriesName);
+            } else {
+                seriesNumber = seriesCount;
+                seriesMap.set(seriesName, seriesCount);
+                Plotly.addTraces(
+                    tester, {x:[], y:[], name:seriesName}, seriesCount
+                )
+                seriesCount++;
+            }
+            Plotly.extendTraces(tester, {y: [[message.count]], x: [[new Date(message.timestampMs)]]}, [seriesNumber]);
+        }
+
+        let ws;
+        let lastOffset = 0;
+
+        const startSync = () => {
+            ws = new WebSocket(`ws://localhost:8080/kafka/analytics-count/${lastOffset}`);
+            ws.onmessage = handleMessage;
+            ws.onerror = setTimeout(startSync, 10000);
+        }
+
+        startSync();
     </script>
 
 </body>
